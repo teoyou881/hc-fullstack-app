@@ -66,20 +66,27 @@ const useUserStore = create((set, get) => ({
     } catch (error) {
       console.error('Logout API error:', error);
     } finally {
-      set({ 
-        user: null, 
-        isAuthenticated: false, 
-        loading: false, 
-        authChecked: true 
+      set({
+        user: null,
+        isAuthenticated: false,
+        loading: false,
+        authChecked: true
       });
 
+      // 현재 경로가 /admin으로 시작하면 adminLogin으로, 아니면 일반 로그인으로
+      const currentPath = window.location.pathname;
+      const isAdminPath = currentPath.startsWith('/admin');
+
       if (navigate) {
-        navigate('/');
+        // navigate가 제공된 경우 (React Router의 useNavigate 사용)
+        navigate(isAdminPath ? '/adminLogin' : '/');
       } else {
-        window.location.href = '/';
+        // navigate가 없는 경우 window.location 사용
+        window.location.href = isAdminPath ? '/adminLogin' : '/';
       }
     }
   },
+
 
   // 인증 상태 초기화 (개발용)
   resetAuthState: () => {

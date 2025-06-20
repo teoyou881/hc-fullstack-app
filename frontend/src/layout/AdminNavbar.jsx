@@ -3,14 +3,15 @@ import {Link, useNavigate} from 'react-router-dom';
 import {Button, Container, Nav, Navbar} from 'react-bootstrap';
 import {
   FaBoxes, FaChartBar, FaCog, FaShoppingCart, FaUsers,
-} from 'react-icons/fa'; // 아이콘 추가
+} from 'react-icons/fa';
+import useUserStore from '../store/useUserStore.js'; // 아이콘 추가
 
-function AdminNavbar({ onLogout }) {
+function AdminNavbar() {
   const navigate = useNavigate();
+  const {logout } = useUserStore();
 
   const handleLogoutClick = () => {
-    onLogout();
-    navigate('/login');
+    logout();
   };
 
   return (
