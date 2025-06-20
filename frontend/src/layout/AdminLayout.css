@@ -1,0 +1,23 @@
+.admin-layout {
+    min-height: 100vh;
+}
+
+#sidebar-wrapper {
+    min-height: 100vh;
+    padding-top: 20px; /* 네비게이션바 아래로 조금 공간 */
+}
+
+#sidebar-wrapper .nav-link {
+    color: #333;
+}
+
+#sidebar-wrapper .nav-link.active {
+    font-weight: bold;
+    color: #007bff;
+    background-color: #e9ecef;
+    border-radius: 5px;
+}
+
+#page-content-wrapper {
+    padding: 20px;
+}

@@ -1,0 +1,130 @@
+html {
+  scrollbar-gutter: stable both-edges;
+}
+body {
+  overflow-y: auto;
+}
+.button-list{
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-right: 20px;
+}
+
+.nav-section{
+  display: flex;
+  justify-content: center;
+}
+
+.menu-list{
+  display: flex;
+  gap: 25px;
+  list-style: none;
+}
+
+.menu-area{
+  display: flex;
+  justify-content: center;
+}
+
+.product-card {
+  /* 기존 스타일 */
+  width: 250px; /* 또는 max-width 등 적절한 너비 설정 */
+  /*border: 1px solid #e0e0e0;*/
+  padding: 15px;
+  text-align: center;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: hidden; /* 이미지나 내용이 넘칠 때 숨김 */
+
+  /* ⭐⭐ 애니메이션을 위한 transition 속성 추가 ⭐⭐ */
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  /* transform: 확대/축소, box-shadow: 그림자 변화 */
+  cursor: pointer; /* 마우스 오버 시 커서 변경으로 상호작용 표시 */
+}
+
+.product-card .product-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin-bottom: 10px;
+  /* 이미지 자체의 부드러운 확대/축소를 원하면 여기에 transition 추가 */
+  /* transition: transform 0.3s ease-in-out; */
+}
+
+/* ⭐⭐ 마우스 오버 시 카드 전체를 확대하는 효과 ⭐⭐ */
+/* img 태그에 마우스를 올렸을 때, 그 img의 부모인 .product-card를 선택 */
+.product-card .product-image:hover {
+  /* 이미지 자체에 확대 효과를 주는 경우 */
+  /* transform: scale(1.05); */
+}
+
+/* ⭐⭐ 가장 일반적인 방법: 카드 컨테이너에 마우스를 올렸을 때 카드를 확대 ⭐⭐ */
+/* 카드를 감싸는 .product-card 자체에 hover를 주는 것이 사용자 경험상 자연스럽습니다. */
+.product-card:hover {
+  transform: scale(1.02); /* 5% 확대 */
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2); /* 그림자도 더 진하게 */
+  z-index: 1; /* 다른 카드 위에 보이도록 z-index 증가 (선택 사항) */
+}
+
+/* 나머지 스타일 */
+.product-card .product-recommendation,
+.product-card .product-new {
+  font-size: 0.8em;
+  color: gray;
+  margin-bottom: 5px;
+}
+
+.product-card .product-title {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.product-card .product-price {
+  color: #007bff;
+  font-size: 1.1em;
+}
+
+login-button{
+  display: flex;
+  flex-direction: column;
+}
+
+.login-page{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-section{
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: start;
+  gap: 10px;
+  width: 300px;
+}
+
+.login-section p{
+  margin: 5px;
+}
+.login-section *{
+  width: inherit;
+}
+
+.login-section button{
+  width: auto;
+  margin-top: 10px;
+  background: #ff5f4e;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.product-img{
+  display: flex;
+  justify-content: flex-end;
+}

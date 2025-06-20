@@ -1,0 +1,127 @@
+# Gradle 관련
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+gradle-app.setting
+!gradle-wrapper.properties
+/gradlew
+/gradlew.bat
+
+# Java 관련
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# IDE 관련
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+.springBeans
+.sts4-cache/
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# OS 관련
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Spring Boot 관련
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# 로그 파일
+*.log
+logs/
+spring.log
+
+# 환경 설정 파일 (민감한 정보)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+application-local.properties
+application-local.yml
+application-dev.properties
+application-dev.yml
+application-prod.properties
+application-prod.yml
+application-secret.properties
+application-secret.yml
+
+# 데이터베이스 관련
+*.db
+*.sqlite
+*.sqlite3
+data/
+mysql-data/
+postgres-data/
+h2-data/
+
+# 임시 파일
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.bak
+*.orig
+
+# 테스트 관련
+.nyc_output/
+coverage/
+test-results/
+allure-results/
+
+# 업로드 파일
+uploads/
+files/
+images/
+static/uploads/
+
+# Docker 관련
+.dockerignore
+docker-compose.override.yml
+
+# Maven 관련
+.mvn/
+mvnw
+mvnw.cmd
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.properties
+
+# JWT 키 파일
+*.pem
+*.key
+jwt-secret.txt
+
+# 캐시
+.cache/

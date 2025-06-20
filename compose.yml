@@ -1,0 +1,67 @@
+services:
+  # Spring Boot Backend Service
+  backend:
+    build:
+      context: ./backend # backend 폴더 안에 Dockerfile이 있다고 가정
+      dockerfile: Dockerfile # backend 폴더 안에 있는 Dockerfile을 사용
+    container_name: backend_container # 컨테이너 이름
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://hyungchul-shopping-mysql.cyayszhfagne.us-east-1.rds.amazonaws.com:3306/springjwt_db?useSSL=false&useUnicode=true&serverTimezone=America/Toronto&allowPublicKeyRetrieval=true&connectTimeout=60000
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: preoccupy-hill-sent-slat-mates-typo
+
+      JWT_SECRET: c2RmYmFzZGtnamJzYWRuZndscXB6bWduYmVs
+      JWT_ACCESS_TOKEN_EXPIRATION_MS: 3600000
+      JWT_REFRESH_TOKEN_EXPIRATION_MS: 604800000
+      JWT_TOKEN_PREFIX: Bearer
+      JWT_HEADER_STRING: Authorization
+      CLOUDINARY_CLOUD_NAME: dqhxarzwd
+      CLOUDINARY_API_KEY: 563238535556164
+      CLOUDINARY_API_SECRET: fRkqBE7iGTS5w5FsqLKWNfQRfwM
+      SPRING_PROFILES_ACTIVE: prod
+    networks:
+      - app_network
+
+  #  mysql_db: # MySQL Service (기존과 동일)
+  #    image: mysql:9.3.0
+  #    container_name: mysql_container
+  #    restart: always
+  #    environment:
+  #      MYSQL_ROOT_PASSWORD: 1234
+  #      MYSQL_DATABASE: springjwt_db
+  #      MYSQL_USER: teo
+  #      MYSQL_PASSWORD: SM!dyrjsahdi1!
+  #    ports:
+  #      - 3306:3306
+  #    healthcheck:
+  #      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "teo", "-pSM!dyrjsahdi1!" ]
+  #      interval: 10s
+  #      timeout: 5s
+  #      retries: 5
+  #      start_period: 30s
+  #    networks:
+  #      - app_network
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend # frontend 폴더 안에 Dockerfile이 있다고 가정
+      dockerfile: Dockerfile # frontend 폴더 안에 있는 Dockerfile을 사용
+    container_name: frontend_container
+    ports:
+      - "80:80"
+    environment:
+      VITE_ADMIN_URL: "/api/admin" # 이제 상대 경로
+      VITE_USER_URL: "/api/"       # 이제 상대 경로
+      VITE_APP_ROUTER_BASENAME: "" # EC2 배포 시 루트
+    depends_on:
+      backend:
+        condition: service_healthy # 또는 service_healthy (백엔드에 헬스체크가 있다면)
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge

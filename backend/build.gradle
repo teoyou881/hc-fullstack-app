@@ -1,0 +1,98 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.0'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+ext {
+    queryDslVersion = "5.0.0" // 사용하려는 QueryDSL 버전으로 변경
+}
+
+group = 'teo'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // JWT Dependencies
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+    // QueryDSL Dependencies
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+    annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
+    annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
+    annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // 테스트 스코프에 필요한 경우
+    testImplementation "com.querydsl:querydsl-jpa:5.0.0:jakarta"
+    testAnnotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+
+    //spy6
+    implementation "com.github.gavlyukovskiy:datasource-decorator-spring-boot-autoconfigure:1.11.0"
+
+    //cloudinary
+    implementation 'com.cloudinary:cloudinary-http44:1.39.0' // 최신 버전을 확인하세요
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+// QueryDSL Configuration
+def querydslGeneratedDir = "$buildDir/generated/querydsl" // 명확성을 위해 이름 변경
+
+sourceSets {
+    main {
+        java {
+            srcDirs += querydslGeneratedDir
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    // 이 설정은 컴파일러에게 어노테이션 프로세서에서 생성된 소스를
+    // 이 특정 디렉토리로 출력하도록 지시합니다. 이것이 올바르고 현대적인 방식입니다.
+    options.generatedSourceOutputDirectory = file(querydslGeneratedDir) // 정의된 변수 사용
+
+    // 어노테이션 프로세서 경로를 명시적으로 설정합니다. 이는 좋은 습관입니다.
+    options.annotationProcessorPath = configurations.annotationProcessor
+}
+
+// clean 태스크도 생성된 Q-클래스를 삭제하도록 합니다.
+clean {
+    delete file('src/main/generated') // 수동으로 여기에 넣었던 경우
+}
+
+// Ensure compileJava depends on processing annotations
+tasks.named('compileJava') {
+    options.annotationProcessorPath = configurations.annotationProcessor
+}

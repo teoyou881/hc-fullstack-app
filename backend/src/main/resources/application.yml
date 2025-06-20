@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: spring-jwt
+
+  # 기본 프로필 설정
+  profiles:
+    active: dev  # 기본값으로 dev 프로필 사용
+
+  servlet:
+    multipart:
+      max-file-size: 10MB       # 단일 파일 최대 크기
+      max-request-size: 100MB   # 전체 요청 최대 크기 (모든 파일 및 폼 데이터 포함)
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.web.cors: DEBUG
