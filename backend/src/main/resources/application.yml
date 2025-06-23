@@ -1,6 +1,6 @@
 spring:
   application:
-    name: spring-jwt
+    name: hyungchul-backend-spring
 
   # 기본 프로필 설정
   profiles:
@@ -15,6 +15,13 @@ server:
   port: 8080
   servlet:
     context-path: /api
+
+jwt:
+  secret: c2RmYmFzZGtnamJzYWRuZndscXB6bWduYmVs
+  access-token-expiration-ms: 3600000 # 예: 1시간 (밀리초)
+  refresh-token-expiration-ms: 604800000 # 예: 7일 (밀리초)
+  token-prefix: Bearer
+  header-string: Authorization
 
 management:
   endpoints:
