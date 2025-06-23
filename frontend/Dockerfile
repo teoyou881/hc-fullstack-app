@@ -6,6 +6,9 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install --ci # npm 사용 시
 
+# .env 파일을 /app 디렉토리로 복사
+COPY .env.production .env
+
 COPY . .
 
 RUN yarn build
