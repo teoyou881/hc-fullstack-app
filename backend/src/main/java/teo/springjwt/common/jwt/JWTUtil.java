@@ -1,3 +1,4 @@
+
 package teo.springjwt.common.jwt;
 
 import io.jsonwebtoken.Claims;
@@ -62,14 +63,19 @@ public class JWTUtil {
     }
   }
 
-  // JWT 생성
-  public String createJwt(String username, String role, Long expirationMs) {
+  // JWT 생성 - Access Token
+  public String createAccessToken(String email, String role) {
+    return createJwt(email, role, jwtProperties.getAccessTokenExpirationMs());
+  }
+
+  // JWT 생성 - 기존 메서드 (호환성 유지)
+  public String createJwt(String email, String role, Long expirationMs) {
     long currentTime = System.currentTimeMillis();
     Date issuedAt = new Date(currentTime);
     Date expiration = new Date(currentTime + expirationMs);
 
     return Jwts.builder()
-               .claim("username", username)
+               .claim("email", email)  // username -> email로 수정
                .claim("role", role)
                .issuedAt(issuedAt)
                .expiration(expiration)
@@ -93,14 +99,28 @@ public class JWTUtil {
       return true; // 토큰이 유효하면 true 반환
     } catch (ExpiredJwtException e) {
       // 만료된 토큰: 특정 로직이 필요할 수 있으므로 별도 처리
-      // todo
-      // 만료된 경우? refresh Token 발급? 할까?
       System.err.println("Expired JWT token: " + e.getMessage());
       return false; // 만료된 토큰은 유효하지 않으므로 false 반환
     } catch (JwtException e) {
       // 모든 다른 JWT 관련 예외 (서명 오류, 구조 오류, 지원되지 않는 형식, 잘못된 클레임 등)
       System.err.println("Invalid JWT token: " + e.getMessage());
       return false; // 유효하지 않은 토큰은 false 반환
+    }
+  }
+
+  // 만료된 토큰에서도 클레임 추출 (리프레시 토큰 검증용)
+  public Claims getClaimsFromExpiredToken(String token) {
+    try {
+      return Jwts.parser()
+                 .verifyWith(secretKey)
+                 .build()
+                 .parseSignedClaims(token)
+                 .getPayload();
+    } catch (ExpiredJwtException e) {
+      return e.getClaims(); // 만료된 토큰의 클레임 반환
+    } catch (Exception e) {
+      System.err.println("Error extracting claims from expired token: " + e.getMessage());
+      return null;
     }
   }
 }

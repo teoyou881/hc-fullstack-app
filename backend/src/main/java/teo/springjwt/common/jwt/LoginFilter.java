@@ -33,6 +33,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
   private final JWTUtil jwtUtil;
   
   private final ObjectMapper objectMapper;
+  
+  private final RefreshTokenService refreshTokenService;
 
 
   @Override
@@ -98,22 +100,29 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
                                     .map(GrantedAuthority::getAuthority);// Optional<String>으로 변환
     String role = optionalRole.orElseGet(() -> "");
 
-    String token = jwtUtil.createJwt(user.getEmail(), role, 60*60*1000L);
+    // Access Token 생성 (짧은 만료 시간)
+    String accessToken = jwtUtil.createAccessToken(user.getEmail(), role);
+    
+    // Refresh Token 생성 (긴 만료 시간)
+    RefreshTokenEntity refreshToken = refreshTokenService.createRefreshToken(user);
 
-    // HttpOnly 쿠키 설정
-    Cookie cookie = new Cookie("Authorization", token); // 쿠키 이름 "Authorization"
-    cookie.setMaxAge(60 * 60 * 24); // 쿠키 유효 기간 (예: 24시간, JWT 유효기간보다 길거나 짧게 설정 가능)
-    cookie.setPath("/"); // 모든 경로에서 접근 가능
-    cookie.setHttpOnly(true); // JavaScript 접근 불가
-    // todo
-    // cookie.setSecure(true); // HTTPS 통신에서만 전송 (배포 환경에서는 필수)
-    // cookie.setDomain("yourdomain.com"); // 도메인 설정 (교차 도메인 쿠키 시 필요)
+    // Access Token을 HttpOnly 쿠키로 설정
+    Cookie accessTokenCookie = new Cookie("Authorization", accessToken);
+    accessTokenCookie.setMaxAge(60 * 60); // 1시간
+    accessTokenCookie.setPath("/");
+    accessTokenCookie.setHttpOnly(true);
+    accessTokenCookie.setSecure(true); // HTTPS 통신에서만 전송 (배포 환경에서는 필수)
+    
+    // Refresh Token을 HttpOnly 쿠키로 설정
+    Cookie refreshTokenCookie = new Cookie("RefreshToken", refreshToken.getToken());
+    refreshTokenCookie.setMaxAge(60 * 60 * 24 * 7); // 7일
+    refreshTokenCookie.setPath("/");
+    refreshTokenCookie.setHttpOnly(true);
+    refreshTokenCookie.setSecure(true); // HTTPS 통신에서만 전송 (배포 환경에서는 필수)
 
-    response.addCookie(cookie); // 응답에 쿠키 추가
+    response.addCookie(accessTokenCookie);
+    response.addCookie(refreshTokenCookie);
 
-    // 주석처리
-    //jwt를 httponly로 설정
-    // response.addHeader(jwtUtil.getJwtProperties().getHeaderString(), jwtUtil.getJwtProperties().getTokenPrefix() + " " + token);
     response.setStatus(HttpServletResponse.SC_OK);
 
     // ResponseLogin 객체를 JSON으로 응답 본문에 추가
