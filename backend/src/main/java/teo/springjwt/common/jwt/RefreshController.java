@@ -1,35 +1,42 @@
 package teo.springjwt.common.jwt;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import teo.springjwt.common.jwt.JWTUtil.TokenType;
+import teo.springjwt.common.utils.JwtCookieUtil;
+import teo.springjwt.user.dto.CustomUserDetails;
+import teo.springjwt.user.dto.UserDto;
 import teo.springjwt.user.entity.UserEntity;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @Slf4j
-
 public class RefreshController {
 
   private final RefreshTokenService refreshTokenService;
   private final JWTUtil jwtUtil;
+  private final JwtCookieUtil jwtCookieUtil;
+  private final ApplicationEventPublisher applicationEventPublisher;
+  private final JWTUtil jWTUtil;
 
   @PostMapping("/refresh")
   public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
     try {
-      // 쿠키에서 리프레시 토큰 추출
-      String refreshToken = extractRefreshTokenFromCookies(request);
+      // 쿠키에서 리프레시 토큰 추출 (JwtCookieUtil 사용)
+      String refreshToken = JwtCookieUtil.extractRefreshTokenFromCookies(request);
       if (refreshToken == null) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                              .body(Map.of("error", "Refresh token not found"));
@@ -48,20 +55,30 @@ public class RefreshController {
       UserEntity user = tokenEntity.getUser();
       String newAccessToken = jwtUtil.createAccessToken(user.getEmail(), user.getRole().name());
 
-      // 새로운 액세스 토큰을 쿠키에 설정
-      Cookie accessTokenCookie = new Cookie("Authorization", newAccessToken);
-      accessTokenCookie.setMaxAge(60 * 60); // 1시간
-      accessTokenCookie.setPath("/");
-      accessTokenCookie.setHttpOnly(true);
-      // accessTokenCookie.setSecure(true); // HTTPS에서만 사용
+      // 현재 refresh 토큰 삭제하고, 새로운 refresh 토큰 발급
+      RefreshTokenEntity newRefreshTokenEntity = refreshTokenService.createRefreshToken(user);
+      String newRefreshToken = newRefreshTokenEntity.getToken();
 
-      response.addCookie(accessTokenCookie);
+      // JwtCookieUtil을 사용하여 새로운 토큰들을 쿠키에 설정
+      JwtCookieUtil jwtCookieUtil1 = new JwtCookieUtil(jWTUtil);
+      jwtCookieUtil1.addAuthCookies(response, newAccessToken, newRefreshToken);
+
+      // UserDto 생성
+      UserDto userDTO = UserDto.builder()
+                       .id( user.getId())
+                       .email(user.getEmail())
+                       .role(user.getRole().name())
+                       .username(user.getUsername())
+                       .phoneNumber(user.getPhoneNumber())
+                       .build();
 
       Map<String, Object> responseBody = new HashMap<>();
+      responseBody.put("success", true);
+      responseBody.put("user", userDTO);
       responseBody.put("message", "Token refreshed successfully");
-      responseBody.put("user", Map.of(
-          "email", user.getEmail(),
-          "role", user.getRole().name()
+      responseBody.put("tokenInfo", Map.of(
+          "accessTokenExpiry", jwtUtil.getTokenExpiryTimestamp(TokenType.ACCESS_TOKEN),
+          "refreshTokenExpiry", jwtUtil.getTokenExpiryTimestamp(TokenType.REFRESH_TOKEN)
       ));
 
       return ResponseEntity.ok(responseBody);

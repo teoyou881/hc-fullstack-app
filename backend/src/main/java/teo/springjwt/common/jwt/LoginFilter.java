@@ -2,11 +2,12 @@ package teo.springjwt.common.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import teo.springjwt.common.jwt.JWTUtil.TokenType;
+import teo.springjwt.common.utils.JwtCookieUtil;
 import teo.springjwt.user.dto.CustomUserDetails;
 import teo.springjwt.user.dto.RequestLogin;
 import teo.springjwt.user.dto.ResponseLogin;
@@ -27,14 +30,11 @@ import teo.springjwt.user.entity.UserEntity;
 @RequiredArgsConstructor
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
-  // 이미 준비된 manager를 주입받아서 사용하자.
   private final AuthenticationManager authenticationManager;
-
   private final JWTUtil jwtUtil;
-  
   private final ObjectMapper objectMapper;
-  
   private final RefreshTokenService refreshTokenService;
+  private final JwtCookieUtil jwtCookieUtil;
 
 
   @Override
@@ -106,12 +106,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     // Refresh Token 생성 (긴 만료 시간)
     RefreshTokenEntity refreshToken = refreshTokenService.createRefreshToken(user);
 
-    // 만료 시간을 초 단위로 변환
-    int accessTokenMaxAgeSeconds = (int) (jwtUtil.getJwtProperties().getAccessTokenExpirationMs() / 1000);
-    int refreshTokenMaxAgeSeconds = (int) (jwtUtil.getJwtProperties().getRefreshTokenExpirationMs() / 1000);
-
-    JwtCookieUtil.addAuthCookies(response, accessToken, accessTokenMaxAgeSeconds,
-                                 refreshToken.getToken(), refreshTokenMaxAgeSeconds);
+    JwtCookieUtil jwtCookieUtil1 = new JwtCookieUtil(jwtUtil);
+    jwtCookieUtil1.addAuthCookies(response, accessToken, refreshToken.getToken());
 
     // ResponseLogin 객체를 JSON으로 응답 본문에 추가
     UserDto userDto = UserDto.builder()
@@ -122,8 +118,18 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
                              .role(role)
                              .build();
     ResponseLogin responseLogin = new ResponseLogin(userDto);
+
+    Map<String, Object> responseBody = new HashMap<>();
+    responseBody.put("success", true);
+    responseBody.put("message", "Login successful");
+    responseBody.put("user", responseLogin);
+    responseBody.put("tokenInfo", Map.of(
+        "accessTokenExpiry", jwtUtil.getTokenExpiryTimestamp(TokenType.ACCESS_TOKEN),
+        "refreshTokenExpiry", jwtUtil.getTokenExpiryTimestamp(TokenType.REFRESH_TOKEN)
+    ));
+    response.setStatus(HttpServletResponse.SC_OK);
     response.setContentType("application/json;charset=UTF-8");
-    response.getWriter().write(objectMapper.writeValueAsString(responseLogin));
+    response.getWriter().write(objectMapper.writeValueAsString(responseBody));
 
   }
 
