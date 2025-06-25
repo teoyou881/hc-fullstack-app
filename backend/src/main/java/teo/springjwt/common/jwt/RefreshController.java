@@ -76,41 +76,58 @@ public class RefreshController {
   @PostMapping("/logout")
   public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
     try {
-      // 리프레시 토큰 추출 및 무효화
-      String refreshToken = extractRefreshTokenFromCookies(request);
-      if (refreshToken != null) {
-        refreshTokenService.revokeRefreshToken(refreshToken);
-      }
+        // 1. 현재 SecurityContext에서 인증 정보 가져오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserEmail = null;
 
-      // 쿠키 삭제
-      Cookie accessTokenCookie = new Cookie("Authorization", null);
-      accessTokenCookie.setMaxAge(0);
-      accessTokenCookie.setPath("/");
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails userDetails) {
+          currentUserEmail = userDetails.getUsername();
+            log.info("Logging out user: {}", currentUserEmail);
+        }
 
-      Cookie refreshTokenCookie = new Cookie("RefreshToken", null);
-      refreshTokenCookie.setMaxAge(0);
-      refreshTokenCookie.setPath("/");
+        /*todo*/
+        //Access Token 추출 및 블랙리스트 처리 (권장)
+        // String accessToken = JwtCookieUtil.extractAccessTokenFromCookies(request);
+        // if (accessToken != null && !jwtUtil.isExpired(accessToken)) {
+        //     // Redis나 메모리 캐시에 블랙리스트 추가
+        //     tokenBlacklistService.addToBlacklist(accessToken);
+        // }
 
-      response.addCookie(accessTokenCookie);
-      response.addCookie(refreshTokenCookie);
+        // 3. 리프레시 토큰 추출 및 무효화 (JwtCookieUtil 사용)
+        String refreshToken = JwtCookieUtil.extractRefreshTokenFromCookies(request);
+        if (refreshToken != null) {
+            refreshTokenService.revokeRefreshToken(refreshToken);
+        }
 
-      return ResponseEntity.ok(Map.of("message", "Logout successful"));
+        // 4. SecurityContext 명시적 초기화 (보안 강화)
+        SecurityContextHolder.clearContext();
+
+        // 5. 쿠키 삭제 (JwtCookieUtil 사용)
+        JwtCookieUtil.clearAuthCookies(response);
+
+        /*todo*/
+        //지금 당장은 구현할 필요가 있나?
+        //로그아웃 이벤트 발행 (선택사항)
+        // if (currentUserEmail != null) {
+        //   try {
+        //     applicationEventPublisher.publishEvent(new UserLogoutEvent(this, currentUserEmail));
+        //   } catch (Exception eventException) {
+        //     log.warn("Failed to publish logout event for user: {}", currentUserEmail, eventException);
+        //     // 이벤트 발행 실패해도 로그아웃은 계속 진행
+        //   }
+        // }
+
+      return ResponseEntity.ok(Map.of(
+          "message", "Logout successful",
+          "timestamp", System.currentTimeMillis()
+      ));
 
     } catch (Exception e) {
       log.error("Error during logout", e);
+      // 오류가 발생해도 SecurityContext는 초기화
+      SecurityContextHolder.clearContext();
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                            .body(Map.of("error", "Logout failed"));
     }
-  }
-
-  private String extractRefreshTokenFromCookies(HttpServletRequest request) {
-    if (request.getCookies() != null) {
-      return Arrays.stream(request.getCookies())
-                   .filter(cookie -> "RefreshToken".equals(cookie.getName()))
-                   .map(Cookie::getValue)
-                   .findFirst()
-                   .orElse(null);
-    }
-    return null;
   }
 }
