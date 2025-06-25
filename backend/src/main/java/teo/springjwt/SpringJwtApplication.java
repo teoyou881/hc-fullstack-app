@@ -29,9 +29,7 @@ public class SpringJwtApplication {
       }
 
       // JWT 토큰에서 추출한 사용자 이름 또는 ID를 반환
-      return Optional.of(authentication.getName());
+      return Optional.ofNullable(authentication.getName());
     };
   }
-
-
 }
