@@ -4,7 +4,6 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -13,6 +12,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+import teo.springjwt.common.utils.JwtCookieUtil;
 import teo.springjwt.user.dto.CustomUserDetails;
 import teo.springjwt.user.entity.UserEntity;
 import teo.springjwt.user.enumerated.UserRole;
@@ -45,16 +45,8 @@ public class JWTFilter extends OncePerRequestFilter {
     }
 
     // 1. 쿠키에서 JWT(Access Token) 가져오기
-    String token = null;
-    Cookie[] cookies = request.getCookies();
-    if (cookies != null) {
-      for (Cookie cookie : cookies) {
-        if (cookie.getName().equals("Authorization")) {
-          token = cookie.getValue();
-          break;
-        }
-      }
-    }
+    String token = JwtCookieUtil.extractAccessTokenFromCookies(request);
+
 
     // 2. JWT가 없으면 다음 필터로 진행
     if (token == null) {

@@ -7,6 +7,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Date;
 import javax.crypto.SecretKey;
 import lombok.Getter;
@@ -123,4 +124,46 @@ public class JWTUtil {
       return null;
     }
   }
+
+  // helper methods for token
+  public LocalDateTime getTokenExpiryTime(TokenType tokenType) {
+    long expirationMs;
+
+    if (tokenType == TokenType.ACCESS_TOKEN) {
+      expirationMs = jwtProperties.getAccessTokenExpirationMs();
+    } else if (tokenType == TokenType.REFRESH_TOKEN) {
+      expirationMs = jwtProperties.getRefreshTokenExpirationMs();
+    } else {
+      throw new IllegalArgumentException("Invalid token type: " + tokenType);
+    }
+
+    return LocalDateTime.now().plusSeconds(expirationMs / 1000);
+  }
+
+  // 토큰 만료 시간을 밀리초로 반환하는 헬퍼 메서드
+  public long getTokenExpiryTimestamp(TokenType tokenType) {
+    return getTokenExpiryTime(tokenType)
+        .atZone(java.time.ZoneId.systemDefault())
+        .toInstant()
+        .toEpochMilli();
+  }
+
+  // 쿠키 만료 시간을 초 단위로 반환하는 헬퍼 메서드 (쿠키 setMaxAge용)
+  public int getTokenExpiryInSeconds(TokenType tokenType) {
+    if (tokenType == TokenType.ACCESS_TOKEN) {
+      return (int) (jwtProperties.getAccessTokenExpirationMs() / 1000);
+    } else if (tokenType == TokenType.REFRESH_TOKEN) {
+      return (int) (jwtProperties.getRefreshTokenExpirationMs() / 1000);
+    } else {
+      throw new IllegalArgumentException("Invalid token type: " + tokenType);
+    }
+  }
+
+  // for token expiration
+  public enum TokenType {
+    ACCESS_TOKEN,
+    REFRESH_TOKEN
+  }
+
+
 }

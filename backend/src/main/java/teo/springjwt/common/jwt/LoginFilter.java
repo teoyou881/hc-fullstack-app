@@ -106,24 +106,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     // Refresh Token 생성 (긴 만료 시간)
     RefreshTokenEntity refreshToken = refreshTokenService.createRefreshToken(user);
 
-    // Access Token을 HttpOnly 쿠키로 설정
-    Cookie accessTokenCookie = new Cookie("Authorization", accessToken);
-    accessTokenCookie.setMaxAge(60 * 60); // 1시간
-    accessTokenCookie.setPath("/");
-    accessTokenCookie.setHttpOnly(true);
-    accessTokenCookie.setSecure(true); // HTTPS 통신에서만 전송 (배포 환경에서는 필수)
-    
-    // Refresh Token을 HttpOnly 쿠키로 설정
-    Cookie refreshTokenCookie = new Cookie("RefreshToken", refreshToken.getToken());
-    refreshTokenCookie.setMaxAge(60 * 60 * 24 * 7); // 7일
-    refreshTokenCookie.setPath("/");
-    refreshTokenCookie.setHttpOnly(true);
-    refreshTokenCookie.setSecure(true); // HTTPS 통신에서만 전송 (배포 환경에서는 필수)
+    // 만료 시간을 초 단위로 변환
+    int accessTokenMaxAgeSeconds = (int) (jwtUtil.getJwtProperties().getAccessTokenExpirationMs() / 1000);
+    int refreshTokenMaxAgeSeconds = (int) (jwtUtil.getJwtProperties().getRefreshTokenExpirationMs() / 1000);
 
-    response.addCookie(accessTokenCookie);
-    response.addCookie(refreshTokenCookie);
-
-    response.setStatus(HttpServletResponse.SC_OK);
+    JwtCookieUtil.addAuthCookies(response, accessToken, accessTokenMaxAgeSeconds,
+                                 refreshToken.getToken(), refreshTokenMaxAgeSeconds);
 
     // ResponseLogin 객체를 JSON으로 응답 본문에 추가
     UserDto userDto = UserDto.builder()
