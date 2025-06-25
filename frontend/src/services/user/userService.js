@@ -20,6 +20,55 @@ const userService = {
   },
 
   /**
+   * 사용자 정보 조회 (토큰 만료 시 자동 갱신)
+   * @returns {Promise<{success: boolean, user?: object, error?: string}>}
+   */
+  getUserInfo: async () => {
+    try {
+      const response = await apiClient.get('/user');
+
+      if (response.data.success) {
+        return {
+          success: true,
+          user: response.data.user
+        };
+      } else {
+        return {
+          success: false,
+          error: response.data.message || 'Failed to get user info'
+        };
+      }
+    } catch (error) {
+      // 401 에러인 경우 토큰 갱신 시도
+      if (error.response?.status === 401) {
+        console.log('Access token expired, attempting refresh...');
+
+        const refreshResult = await this.refreshAccessToken();
+        if (refreshResult.success) {
+          // 🎉 토큰 갱신 성공 시 이미 받은 user 정보 사용
+          return {
+            success: true,
+            user: refreshResult.user // 추가 API 호출 없이 바로 사용
+          };
+        } else {
+          return {
+            success: false,
+            error: 'Token refresh failed',
+            needsLogin: true
+          };
+        }
+      }
+
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to get user info'
+      };
+    }
+  },
+
+
+
+  /**
    * ID로 특정 사용자를 조회합니다.
    * @param {string} userId - 조회할 사용자의 ID
    * @returns {Object|null} 사용자 객체 또는 null
@@ -95,6 +144,31 @@ const userService = {
     } catch (error) {
       console.error(`[UserService Error] Error deleting user ${userId}:`, error.message);
       throw new Error('Failed to delete user.');
+    }
+  },
+
+  async refreshAccessToken() {
+    try {
+      const response = await apiClient.post('/auth/refresh');
+
+      if (response.data.success) {
+        return {
+          success  :true,
+          user     :response.data.user,
+          tokenInfo:response.data.tokenInfo // 토큰 만료 시간 등
+        };
+      } else {
+        return {
+          success:false,
+          error  :response.data.message || 'Token refresh failed'
+        };
+      }
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      return {
+        success:false,
+        error  :error.response?.data?.message || 'Token refresh failed'
+      };
     }
   }
 };
