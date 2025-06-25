@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import teo.springjwt.cart.CartEntity;
 import teo.springjwt.common.entity.BaseTimeEntity;
+import teo.springjwt.common.jwt.RefreshTokenEntity;
 import teo.springjwt.order.OrderEntity;
 import teo.springjwt.review.ReviewEntity;
 import teo.springjwt.user.enumerated.UserRole;
@@ -76,6 +77,9 @@ public class UserEntity extends BaseTimeEntity {
 
   @OneToMany(mappedBy = "user", cascade = ALL, orphanRemoval = true, fetch = LAZY) // Add cascade for review management if desired
   private List<ReviewEntity> reviews = new ArrayList<>();
+
+  @OneToMany(mappedBy = "user", fetch = LAZY)
+  private List<RefreshTokenEntity> refreshTokens = new ArrayList<>();
 
   // for Register
   public UserEntity(String email, String password, UserRole role, String username, String phoneNumber) {
