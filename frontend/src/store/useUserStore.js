@@ -1,16 +1,13 @@
-// src/store/useUserStore.js
 import {create} from 'zustand';
-import apiClient from '../util/apiClient.js'; // API 클라이언트 임포트
+import apiClient from '../util/apiClient.js';
+import userService from '../services/user/userService.js';
 
 const useUserStore = create((set, get) => ({
-  //- **`isAuthenticated`**: "사용자가 로그인되어 있나요?"
-  // - **`authChecked`**: "서버에 확인해봤나요?"
   user: null,
   isAuthenticated: false,
   loading: false,
-  authChecked: false, // 인증 체크 완료 여부
+  authChecked: false,
 
-  // ⭐ 새로운 login 액션 추가 ⭐
   login: (userData) => {
     set({ user: userData, isAuthenticated: true, loading: false, authChecked: true });
   },
@@ -18,20 +15,69 @@ const useUserStore = create((set, get) => ({
   setUser: (userData) => set({ user: userData, isAuthenticated: true, authChecked: true }),
   clearUser: () => set({ user: null, isAuthenticated: false, authChecked: true }),
 
+  /**
+   * 토큰 갱신
+   */
+  refreshToken: async () => {
+    const { loading } = get();
+    if (loading) return { success: false, error: 'Already loading' };
+
+    set({ loading: true });
+    
+    try {
+      const result = await userService.refreshAccessToken();
+      
+      if (result.success) {
+        set({ 
+          user: result.user, 
+          isAuthenticated: true, 
+          authChecked: true 
+        });
+        return { success: true };
+      } else {
+        // 토큰 갱신 실패 시 로그아웃 처리
+        set({ 
+          user: null, 
+          isAuthenticated: false, 
+          authChecked: true 
+        });
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      set({ 
+        user: null, 
+        isAuthenticated: false, 
+        authChecked: true 
+      });
+      return { success: false, error: 'Token refresh failed' };
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  /**
+   * 로그인 상태 확인 (토큰 갱신 포함)
+   */
   checkLoginStatus: async () => {
     const { loading, authChecked } = get();
     
-    // 이미 인증 체크가 완료되었거나 로딩 중이면 중복 요청 방지
     if (loading || authChecked) return;
     
     set({ loading: true });
+    
     try {
-      const response = await apiClient.get('/user');
-
-      if (response.data.success && (response.data.user)) {
+      const result = await userService.getUserInfo();
+      if (result.success) {
         set({ 
-          user: response.data.user, 
+          user: result.user, 
           isAuthenticated: true, 
+          authChecked: true 
+        });
+      } else if (result.needsLogin) {
+        // 토큰 갱신도 실패한 경우
+        set({ 
+          user: null, 
+          isAuthenticated: false, 
           authChecked: true 
         });
       } else {
@@ -42,17 +88,11 @@ const useUserStore = create((set, get) => ({
         });
       }
     } catch (error) {
-      console.error('Failed to fetch user info or token invalid:', error);
-      
-      // 네트워크 에러인 경우 인증되지 않은 상태로 처리
-      if (error.code === 'ERR_NETWORK' || error.code === 'ERR_CONNECTION_REFUSED') {
-        console.warn('Backend server not available, setting as unauthenticated');
-      }
-      
+      console.error('Failed to check login status:', error);
       set({ 
         user: null, 
         isAuthenticated: false, 
-        authChecked: true // 에러가 발생해도 체크 완료로 처리
+        authChecked: true 
       });
     } finally {
       set({ loading: false });
@@ -62,7 +102,7 @@ const useUserStore = create((set, get) => ({
   logout: async (navigate = null) => {
     set({ loading: true });
     try {
-      await apiClient.post('/logout');
+      await apiClient.post('/auth/logout');
     } catch (error) {
       console.error('Logout API error:', error);
     } finally {
@@ -73,22 +113,17 @@ const useUserStore = create((set, get) => ({
         authChecked: true
       });
 
-      // 현재 경로가 /admin으로 시작하면 adminLogin으로, 아니면 일반 로그인으로
       const currentPath = window.location.pathname;
       const isAdminPath = currentPath.startsWith('/admin');
 
       if (navigate) {
-        // navigate가 제공된 경우 (React Router의 useNavigate 사용)
         navigate(isAdminPath ? '/adminLogin' : '/');
       } else {
-        // navigate가 없는 경우 window.location 사용
         window.location.href = isAdminPath ? '/adminLogin' : '/';
       }
     }
   },
 
-
-  // 인증 상태 초기화 (개발용)
   resetAuthState: () => {
     set({ 
       user: null, 
