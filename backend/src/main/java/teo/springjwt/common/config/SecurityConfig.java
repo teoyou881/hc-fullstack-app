@@ -20,6 +20,7 @@ import teo.springjwt.common.jwt.JWTFilter;
 import teo.springjwt.common.jwt.JWTUtil;
 import teo.springjwt.common.jwt.LoginFilter;
 import teo.springjwt.common.jwt.RefreshTokenService;
+import teo.springjwt.common.utils.JwtCookieUtil;
 
 @Configuration
 @EnableWebSecurity
@@ -28,14 +29,11 @@ public class SecurityConfig {
 
   // AuthenticationManager가 인자로 받을 AuthenticationConfiguraion 객체 생성자 주입
   private final AuthenticationConfiguration authenticationConfiguration;
-
   private final JWTUtil jwtUtil;
-
   private final ObjectMapper objectMapper;
-
   private final CorsConfigurationSource corsConfigurationSource;
-  
   private final RefreshTokenService refreshTokenService;
+  private final JwtCookieUtil jwtCookieUtil;
 
   // 명시적으로 등록해야 한다.
   // security 5.0부터는 명시적으로 passwordEncoder를 빈으로 등록하지 않으면 예외 발생.
@@ -78,7 +76,7 @@ public class SecurityConfig {
         .anyRequest().authenticated());
         
     http.addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
-    http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, objectMapper, refreshTokenService), UsernamePasswordAuthenticationFilter.class);
+    http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, objectMapper, refreshTokenService, jwtCookieUtil), UsernamePasswordAuthenticationFilter.class);
 
     // 세션 설정
     http.sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
