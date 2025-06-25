@@ -7,7 +7,9 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import javax.crypto.SecretKey;
 import lombok.Getter;
@@ -125,35 +127,32 @@ public class JWTUtil {
     }
   }
 
+
   // helper methods for token
-  public LocalDateTime getTokenExpiryTime(TokenType tokenType) {
-    long expirationMs;
-
-    if (tokenType == TokenType.ACCESS_TOKEN) {
-      expirationMs = jwtProperties.getAccessTokenExpirationMs();
-    } else if (tokenType == TokenType.REFRESH_TOKEN) {
-      expirationMs = jwtProperties.getRefreshTokenExpirationMs();
-    } else {
-      throw new IllegalArgumentException("Invalid token type: " + tokenType);
-    }
-
-    return LocalDateTime.now().plusSeconds(expirationMs / 1000);
+  public Instant getExpiryInstant(TokenType tokenType) {
+    long expirationMs = switch (tokenType) {
+      case ACCESS_TOKEN -> jwtProperties.getAccessTokenExpirationMs();
+      case REFRESH_TOKEN -> jwtProperties.getRefreshTokenExpirationMs();
+    };
+    return Instant.ofEpochMilli(System.currentTimeMillis() + expirationMs);
   }
 
-  // 토큰 만료 시간을 밀리초로 반환하는 헬퍼 메서드
+  public LocalDateTime getTokenExpiryTime(TokenType tokenType) {
+    return getExpiryInstant(tokenType)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDateTime();
+  }
+
   public long getTokenExpiryTimestamp(TokenType tokenType) {
-    return getTokenExpiryTime(tokenType)
-        .atZone(java.time.ZoneId.systemDefault())
-        .toInstant()
-        .toEpochMilli();
+    return getExpiryInstant(tokenType).toEpochMilli();
   }
 
   // 쿠키 만료 시간을 초 단위로 반환하는 헬퍼 메서드 (쿠키 setMaxAge용)
-  public int getTokenExpiryInSeconds(TokenType tokenType) {
+  public long getTokenExpiryInSeconds(TokenType tokenType) {
     if (tokenType == TokenType.ACCESS_TOKEN) {
-      return (int) (jwtProperties.getAccessTokenExpirationMs() / 1000);
+      return  (jwtProperties.getAccessTokenExpirationMs() / 1000);
     } else if (tokenType == TokenType.REFRESH_TOKEN) {
-      return (int) (jwtProperties.getRefreshTokenExpirationMs() / 1000);
+      return (jwtProperties.getRefreshTokenExpirationMs() / 1000);
     } else {
       throw new IllegalArgumentException("Invalid token type: " + tokenType);
     }
