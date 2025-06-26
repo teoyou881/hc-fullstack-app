@@ -9,7 +9,7 @@ const useUserStore = create((set, get) => ({
   authChecked: false,
 
   login: (userData) => {
-    set({ user: userData, isAuthenticated: true, loading: false, authChecked: true });
+    set({ user: userData.user, isAuthenticated: true, loading: false, authChecked: true });
   },
 
   setUser: (userData) => set({ user: userData, isAuthenticated: true, authChecked: true }),
