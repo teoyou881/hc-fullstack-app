@@ -40,8 +40,6 @@ const Login = () => {
         email: email,
         password: password,
       });
-
-      console.log("Login.jsx: 30", response);
       const { user } = response.data;
 
       // Zustand Store에 사용자 정보 저장
@@ -59,7 +57,6 @@ const Login = () => {
 
   useEffect(() => {
     // 이미 로그인되어 있다면 적절한 경로로 리다이렉트
-    console.log("Login.jsx: isAuthenticated", isAuthenticated);
     if (isAuthenticated) {
       const redirectPath = getRedirectPath();
       nav(redirectPath, { replace: true });

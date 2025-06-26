@@ -7,9 +7,6 @@ import {useAllProducts} from '../../hooks/products/useProducts.jsx'; // useProdu
 
 const HomePage = () => {
   const { data: productList, isLoading, isError, error } = useAllProducts();
-
-  console.log("HomePage.jsx: Data from useAllProducts", productList);
-
   // 로딩 상태 처리
   if (isLoading) {
     return (
