@@ -22,7 +22,16 @@ public class UserService {
       return;
     }
 
-    UserEntity user = new UserEntity(dto.getEmail(), encoder.encode(dto.getPassword()),  UserRole.ROLE_USER, dto.getUsername(),dto.getPhoneNumber());
+    UserEntity user = new UserEntity(
+        dto.getEmail(),
+        encoder.encode(dto.getPassword()),
+        UserRole.ROLE_USER,
+        dto.getUsername(),
+        dto.getPhoneNumber());
     userRepository.save(user);
+  }
+
+  public UserEntity findUserByEmail(String email) {
+    return userRepository.findByEmail(email);
   }
 }

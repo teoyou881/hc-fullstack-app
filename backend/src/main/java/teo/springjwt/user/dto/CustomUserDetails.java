@@ -31,8 +31,8 @@ public class CustomUserDetails implements UserDetails {
     return user.getUsername();
   }
 
-  public String getEmail() {
-    return user.getEmail();
+  public UserEntity getUser() {
+    return user;
   }
 
   @Override
@@ -55,7 +55,4 @@ public class CustomUserDetails implements UserDetails {
     return UserDetails.super.isEnabled();
   }
 
-  public UserEntity getUser() {
-    return user;
-  }
 }

@@ -34,7 +34,8 @@ public class UserController {
   public ResponseEntity<Object> user(Principal principal) {
     System.out.println(principal);
     CustomUserDetails userDetails = (CustomUserDetails) ((Authentication) principal).getPrincipal();
-    UserEntity user = userDetails.getUser();
+
+    UserEntity user = userService.findUserByEmail(userDetails.getUser().getEmail());
 
     // DTO 변환
     UserDto userDto = UserDto.builder()
