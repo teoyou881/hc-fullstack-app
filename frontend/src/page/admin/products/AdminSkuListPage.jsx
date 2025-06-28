@@ -1,11 +1,11 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {Link, useNavigate, useParams} from 'react-router-dom';
 import {
-  Alert, Button, Col, Container, Form, Modal, Row, Table,Image
+  Alert, Button, Col, Container, Form, Image, Modal, Row, Table,
 } from 'react-bootstrap';
 
 import skuService from '../../../services/admin/SkuService.js';
-import {FaStar} from 'react-icons/fa'; // SKU 서비스 임포트
+
 // productService는 더 이상 상품명 조회를 위해 사용하지 않으므로 임포트 제거
 
 function AdminSkuListPage() {
@@ -222,7 +222,7 @@ function AdminSkuListPage() {
 
                     </td>
                     <td>
-                  <Link to={`/hc_h_m/admin/sku/${sku.id}`}
+                  <Link to={`/admin/sku/${sku.id}`}
                     className="text-decoration-none">
                       <Button
                           variant="link"

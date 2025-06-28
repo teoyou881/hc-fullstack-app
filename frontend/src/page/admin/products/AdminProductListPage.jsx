@@ -1,10 +1,9 @@
 // src/pages/admin/AdminProductListPage.jsx
-import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, {useCallback, useEffect, useState} from 'react';
+import {Link, useNavigate} from 'react-router-dom';
 import {
-  Container, Row, Col, Table, Button, Form, Pagination, Alert, Image, InputGroup
+  Alert, Button, Container, Form, InputGroup, Pagination, Table,
 } from 'react-bootstrap'; // React Bootstrap 컴포넌트 임포트
-
 import productService from '../../../services/admin/productService.js';
 
 function AdminProductListPage() {
@@ -154,7 +153,7 @@ function AdminProductListPage() {
                     <tr key={product.id}>
                       <td>{product.id}</td>
                       <td>
-                        <Link to={`/hc_h_m/admin/products/${product.id}/sku`} className="text-decoration-none">
+                        <Link to={`/admin/products/${product.id}/sku`} className="text-decoration-none">
                           {product.name}
                         </Link>
                       </td>
