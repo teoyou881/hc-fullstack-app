@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {Route, Routes} from 'react-router-dom';
+import {Route, Routes, useNavigate} from 'react-router-dom';
 import useUserStore from './store/useUserStore.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 // Import your components
@@ -29,11 +29,12 @@ import AdminUserListPage from './page/admin/users/AdminUserListPage.jsx';
 
 const App = () => {
   const {user, isAuthenticated, loading, authChecked, checkLoginStatus} = useUserStore();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // 컴포넌트 마운트 시 인증 상태 확인
     if (!authChecked) {
-      checkLoginStatus();
+      checkLoginStatus(navigate);
     }
   }, [checkLoginStatus, authChecked]);
 
@@ -57,7 +58,7 @@ const App = () => {
     <div className="App">
       <Routes>
         {/* 관리자 관련 라우트 - 우선순위를 위해 먼저 배치 */}
-        <Route element={<PrivateRoute isAuthenticated={isAuthenticated} userRole={userRole} requiredRoles={["ROLE_ADMIN", "ROLE_MANAGER"]} />}>
+        <Route element={<PrivateRoute isAuthenticated={isAuthenticated} authChecked={authChecked} userRole={userRole} requiredRoles={["ROLE_ADMIN", "ROLE_MANAGER"]} />}>
           <Route path="/admin/*" element={<AdminLayout />}>
             <Route index element={<AdminHome />} />
             <Route path="products" element={<AdminProductListPage />} />

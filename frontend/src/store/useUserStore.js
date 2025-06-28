@@ -16,83 +16,47 @@ const useUserStore = create((set, get) => ({
   clearUser: () => set({ user: null, isAuthenticated: false, authChecked: true }),
 
   /**
-   * 토큰 갱신
-   */
-  refreshToken: async () => {
-    const { loading } = get();
-    if (loading) return { success: false, error: 'Already loading' };
-
-    set({ loading: true });
-    
-    try {
-      const result = await userService.refreshAccessToken();
-      
-      if (result.success) {
-        set({ 
-          user: result.user, 
-          isAuthenticated: true, 
-          authChecked: true 
-        });
-        return { success: true };
-      } else {
-        // 토큰 갱신 실패 시 로그아웃 처리
-        set({ 
-          user: null, 
-          isAuthenticated: false, 
-          authChecked: true 
-        });
-        return { success: false, error: result.error };
-      }
-    } catch (error) {
-      set({ 
-        user: null, 
-        isAuthenticated: false, 
-        authChecked: true 
-      });
-      return { success: false, error: 'Token refresh failed' };
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  /**
    * 로그인 상태 확인 (토큰 갱신 포함)
    */
   checkLoginStatus: async () => {
     const { loading, authChecked } = get();
-    
+
     if (loading || authChecked) return;
-    
+
+    // 현재 로그인 관련 페이지에 있으면 체크하지 않음
+    const currentPath = window.location.pathname;
+    const isAuthPage = currentPath === '/login' ||
+        currentPath === '/adminLogin' ||
+        currentPath === '/register';
+
+    if (isAuthPage) {
+      set({ authChecked: true });
+      return;
+    }
+
     set({ loading: true });
-    
+
     try {
       const result = await userService.getUserInfo();
       if (result.success) {
-        set({ 
-          user: result.user, 
-          isAuthenticated: true, 
-          authChecked: true 
-        });
-      } else if (result.needsLogin) {
-        // 토큰 갱신도 실패한 경우
-        set({ 
-          user: null, 
-          isAuthenticated: false, 
-          authChecked: true 
+        set({
+          user: result.user,
+          isAuthenticated: true,
+          authChecked: true
         });
       } else {
-        set({ 
-          user: null, 
-          isAuthenticated: false, 
-          authChecked: true 
+        set({
+          user: null,
+          isAuthenticated: false,
+          authChecked: true
         });
       }
     } catch (error) {
       console.error('Failed to check login status:', error);
-      set({ 
-        user: null, 
-        isAuthenticated: false, 
-        authChecked: true 
+      set({
+        user: null,
+        isAuthenticated: false,
+        authChecked: true
       });
     } finally {
       set({ loading: false });
