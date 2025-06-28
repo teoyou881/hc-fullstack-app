@@ -35,11 +35,11 @@ public class JWTFilter extends OncePerRequestFilter {
 
     // 특정 경로 (예: /actuator/health, /login 등 permitAll 경로)에 대해서는 필터링을 건너뛰기
     String requestUri = request.getRequestURI();
-    if (requestUri.startsWith("/actuator/health") || 
-        requestUri.startsWith("/login") || 
-        requestUri.startsWith("/product") ||
-        requestUri.startsWith("/auth/refresh") ||  // 토큰 갱신 경로 추가
-        requestUri.startsWith("/auth/logout")) {   // 로그아웃 경로 추가
+    if (requestUri.startsWith("/api/actuator/health") ||
+        requestUri.startsWith("/api/login") ||
+        requestUri.startsWith("/api/product") ||
+        requestUri.startsWith("/api/auth/refresh") ||  // 토큰 갱신 경로 추가
+        requestUri.startsWith("/api/auth/logout")) {   // 로그아웃 경로 추가
       filterChain.doFilter(request, response);
       return;
     }
