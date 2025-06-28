@@ -38,12 +38,12 @@ const HomePage = () => {
       // <Container> 대신 div와 max-w, mx-auto, px 사용
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"> {/* Max width, center, responsive padding, vertical padding */}
         {/* <Row> 대신 div와 flex, flex-wrap, -mx-N 사용 (Row의 gutter 효과) */}
-        <div className="flex flex-wrap -mx-2 lg:-mx-4"> {/* flex wrap for columns, negative margin for gutter effect */}
+        <div className="flex flex-wrap -mx-2 lg:-mx-4 "> {/* flex wrap for columns, negative margin for gutter effect */}
           {productList.map((item) => (
               // <Col> 대신 div와 w-1/N, px-N 사용 (Col의 width 및 padding 효과)
               <div
                   key={item.id} // key는 item.id를 사용
-                  className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-2 mb-4 lg:px-4" // Responsive widths, horizontal padding, margin bottom
+                  className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-2 mb-4 lg:px-4 cursor-pointer bg-lightgray" // Responsive widths, horizontal padding, margin bottom
               >
                 <ProductCard product={item} />
               </div>
