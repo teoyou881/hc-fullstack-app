@@ -10,8 +10,8 @@ function AdminNavbar() {
   const navigate = useNavigate();
   const {logout } = useUserStore();
 
-  const handleLogoutClick = () => {
-    logout();
+  const handleLogoutClick = async() => {
+    await logout(navigate);
   };
 
   return (
