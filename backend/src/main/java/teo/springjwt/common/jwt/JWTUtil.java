@@ -13,10 +13,12 @@ import java.time.ZoneId;
 import java.util.Date;
 import javax.crypto.SecretKey;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
 @Getter
+@Slf4j
 public class JWTUtil {
 
   private final JWTProperties jwtProperties;
@@ -102,11 +104,11 @@ public class JWTUtil {
       return true; // 토큰이 유효하면 true 반환
     } catch (ExpiredJwtException e) {
       // 만료된 토큰: 특정 로직이 필요할 수 있으므로 별도 처리
-      System.err.println("Expired JWT token: " + e.getMessage());
+      log.error(" jwtUtil valid token _ Expired JWT token: {}", e.getMessage());
       return false; // 만료된 토큰은 유효하지 않으므로 false 반환
     } catch (JwtException e) {
       // 모든 다른 JWT 관련 예외 (서명 오류, 구조 오류, 지원되지 않는 형식, 잘못된 클레임 등)
-      System.err.println("Invalid JWT token: " + e.getMessage());
+      log.error("jwtUtil valid token _ Invalid JWT token: {}", e.getMessage());
       return false; // 유효하지 않은 토큰은 false 반환
     }
   }
@@ -163,6 +165,4 @@ public class JWTUtil {
     ACCESS_TOKEN,
     REFRESH_TOKEN
   }
-
-
 }
