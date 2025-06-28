@@ -2,7 +2,6 @@ package teo.springjwt.common.jwt;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,7 +22,12 @@ public class RefreshTokenService {
     revokeAllRefreshTokensByUser(user);
 
     // 새로운 리프레시 토큰 생성
-    String token = UUID.randomUUID().toString();
+    String token = jwtUtil.createJwt(
+        user.getEmail(),
+        user.getRole().name(),
+        jwtUtil.getJwtProperties().getRefreshTokenExpirationMs()
+    );
+
     LocalDateTime expiresAt = LocalDateTime.now()
                                            .plusSeconds(jwtUtil.getJwtProperties().getRefreshTokenExpirationMs() / 1000);
 
