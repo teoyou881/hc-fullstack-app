@@ -37,6 +37,8 @@ public class RefreshController {
     try {
       // 쿠키에서 리프레시 토큰 추출 (JwtCookieUtil 사용)
       String refreshToken = JwtCookieUtil.extractRefreshTokenFromCookies(request);
+
+      log.info("Refreshing token: {}", refreshToken);
       if (refreshToken == null) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                              .body(Map.of("error", "Refresh token not found"));
@@ -47,6 +49,7 @@ public class RefreshController {
                                                           .orElse(null);
 
       if (tokenEntity == null || !tokenEntity.isValid()) {
+        JwtCookieUtil.clearAuthCookies(response);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                              .body(Map.of("error", "Invalid refresh token"));
       }
