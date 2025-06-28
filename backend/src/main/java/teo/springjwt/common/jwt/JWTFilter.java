@@ -44,32 +44,40 @@ public class JWTFilter extends OncePerRequestFilter {
       return;
     }
 
-    // 1. 쿠키에서 JWT(Access Token) 가져오기
-    String token = JwtCookieUtil.extractAccessTokenFromCookies(request);
-
+    // 1. 쿠키에서 JWT토큰 가져오기
+    String accessToken = JwtCookieUtil.extractAccessTokenFromCookies(request);
+    String refreshToken = JwtCookieUtil.extractRefreshTokenFromCookies(request);
 
     // 2. JWT가 없으면 다음 필터로 진행
-    if (token == null) {
-      log.debug("No JWT cookie found for request: {}", request.getRequestURI());
-      filterChain.doFilter(request, response);
+    if (accessToken == null) {
+      // Refresh Token이 있으면 토큰 갱신을 위한 응답
+      if (refreshToken != null) {
+        log.debug("No access token but refresh token exists. Requesting token refresh.");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"error\":\"Access token missing\",\"code\":\"TOKEN_REFRESH_REQUIRED\",\"message\":\"Please refresh your access token using the refresh token\"}");
+      } else {
+        // Refresh Token도 없으면 인증 필요
+        log.debug("No tokens found for request: {}", request.getRequestURI());
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"error\":\"Authentication required\",\"code\":\"AUTHENTICATION_REQUIRED\",\"message\":\"Please login to access this resource\"}");
+      }
       return;
     }
 
+
     // --- JWT 자체 유효성 검증 로직 추가 ---
     try {
-      if (!jwtUtil.validateToken(token)) {
-        System.out.println("token validation failed (invalid signature, malformed, or expired)");
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("{\"error\":\"Token expired\",\"code\":\"TOKEN_EXPIRED\"}");
+      if (!jwtUtil.validateToken(accessToken)) {
+        System.out.println("accessToken = " + accessToken);
+        sendTokenRefreshResponse(response, refreshToken);
         return;
       }
     } catch (ExpiredJwtException e) {
       // 만료된 토큰에 대한 특별 처리
       System.out.println("token expired (caught in filter): " + e.getMessage());
-      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-      response.setContentType("application/json;charset=UTF-8");
-      response.getWriter().write("{\"error\":\"Token expired\",\"code\":\"TOKEN_EXPIRED\"}");
+      sendTokenRefreshResponse(response, refreshToken);
       return;
     } catch (JwtException e) {
       System.out.println("invalid JWT token (caught in filter): " + e.getMessage());
@@ -79,12 +87,11 @@ public class JWTFilter extends OncePerRequestFilter {
       return;
     }
 
+
     //토큰에서 username과 role 획득
-    String email = jwtUtil.getEmail(token);
-    //새 토큰 저장 및 재시도:
-    // 클라이언트는 서버로부터 받은 새로운 Access Token과 Refresh Token을 기존 토큰을 덮어쓰고 안전하게 저장합니다.
-    // 이전에 Access Token 만료로 실패했던 원래 API 요청을 새로운 Access Token으로 자동으로 재시도합니다.
-    String roleString = jwtUtil.getRole(token);
+    String email = jwtUtil.getEmail(accessToken);
+    String roleString = jwtUtil.getRole(accessToken);
+
 
     //userEntity를 생성하여 값 set
     UserEntity userEntity = new UserEntity(email, null, UserRole.valueOf(roleString));
@@ -99,4 +106,20 @@ public class JWTFilter extends OncePerRequestFilter {
 
     filterChain.doFilter(request, response);
   }
+
+  /**
+   * 토큰 갱신이 필요한 경우의 응답을 보내는 메서드
+   */
+  private void sendTokenRefreshResponse(HttpServletResponse response, String refreshToken) throws IOException {
+    if (refreshToken != null) {
+      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      response.setContentType("application/json;charset=UTF-8");
+      response.getWriter().write("{\"error\":\"Token expired\",\"code\":\"TOKEN_REFRESH_REQUIRED\",\"message\":\"Please refresh your access token using the refresh token\"}");
+    } else {
+      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      response.setContentType("application/json;charset=UTF-8");
+      response.getWriter().write("{\"error\":\"Token expired\",\"code\":\"AUTHENTICATION_REQUIRED\",\"message\":\"Please login again\"}");
+    }
+  }
+
 }
