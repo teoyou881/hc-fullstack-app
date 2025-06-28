@@ -53,8 +53,10 @@ public class ProductService {
                              .map(SkuEntity::getPrice).min(BigDecimal::compareTo).orElse(BigDecimal.ZERO);
 
 
-    List<ResponseProductEntity> list = productRepository.findAll().stream().map(ResponseProductEntity::from).toList();
-    // list.forEach(product -> product.setMinPrice(minPrice));
+    List<ResponseProductEntity> list = productRepository.findAll().stream()
+                                                        .map(ResponseProductEntity::from)
+                                                        .peek(product -> product.setMinPrice(minPrice))
+                                                        .toList();
     return ResponseEntity.ok(list);
   }
 
