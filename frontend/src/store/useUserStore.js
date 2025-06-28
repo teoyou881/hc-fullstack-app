@@ -64,7 +64,11 @@ const useUserStore = create((set, get) => ({
   },
 
   logout: async (navigate = null) => {
+    const { loading } = get();
+    if (loading) return; // 중복 실행 방지
+
     set({ loading: true });
+
     try {
       await apiClient.post('/auth/logout');
     } catch (error) {
@@ -81,10 +85,41 @@ const useUserStore = create((set, get) => ({
       const isAdminPath = currentPath.startsWith('/admin');
 
       if (navigate) {
-        navigate(isAdminPath ? '/adminLogin' : '/');
+        navigate(isAdminPath ? '/adminLogin' : '/login');
       } else {
-        window.location.href = isAdminPath ? '/adminLogin' : '/';
+        window.location.href = isAdminPath ? '/adminLogin' : '/login';
       }
+    }
+  },
+
+  /**
+   * 강제 로그아웃 (권한 없음, 토큰 만료 등의 경우)
+   */
+  forceLogout: async (redirectPath = null) => {
+    try {
+      // 백엔드에 로그아웃 요청 (토큰 정리)
+      await apiClient.post('/auth/logout').catch(() => {
+        // 실패해도 계속 진행
+      });
+    } catch (error) {
+      console.error('Force logout API error:', error);
+    }
+
+    // 상태 초기화
+    set({
+      user: null,
+      isAuthenticated: false,
+      loading: false,
+      authChecked: true
+    });
+
+    // 리다이렉트
+    if (redirectPath) {
+      window.location.href = redirectPath;
+    } else {
+      const currentPath = window.location.pathname;
+      const isAdminPath = currentPath.startsWith('/admin');
+      window.location.href = isAdminPath ? '/adminLogin' : '/login';
     }
   },
 
