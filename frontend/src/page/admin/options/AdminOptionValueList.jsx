@@ -1,10 +1,10 @@
 // src/pages/admin/options/AdminOptionValueList.jsx
-import React, { useState, useEffect } from 'react';
-import { Table, Button, Form, Modal, Alert } from 'react-bootstrap';
+import React, {useEffect, useState} from 'react';
+import {Alert, Button, Form, Modal, Table} from 'react-bootstrap';
 // 옵션 값 및 옵션 타입 관련 API 서비스를 가정
 import optionValueService from '../../../services/admin/optionValueService.js'; // 실제 경로에 맞게 수정해주세요
 import optionTypeService from '../../../services/admin/optionTypeService.js'; // 실제 경로에 맞게 수정해주세요
-import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import {FaEdit, FaPlus, FaTrash} from 'react-icons/fa';
 
 function AdminOptionValueList() {
   const [optionValues, setOptionValues] = useState([]);
@@ -150,7 +150,10 @@ function AdminOptionValueList() {
       <div className="container mt-4">
         <h1>옵션 값 관리</h1>
         <Button variant="primary" onClick={handleShowCreateModal} className="mb-3">
-          <FaPlus className="me-1" /> 새 옵션 값 추가
+          <span className="d-flex align-items-center">
+            <FaPlus className="me-1" /> 새 옵션 값 추가
+          </span>
+
         </Button>
 
         {error && <Alert variant="danger">{error}</Alert>}
