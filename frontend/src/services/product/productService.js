@@ -1,6 +1,5 @@
 import apiClient from '../../util/apiClient.js';
 
-
 const productService = {
   // ----------------------------------------------------
   // Category 관련 API
@@ -64,7 +63,42 @@ const productService = {
 
   getProductById: async(productId) =>{
     const response = await apiClient.get(`/product/${productId}`);
-    return response.data;
+    const uniqueSizes = new Set();
+    const uniqueColors = new Set();
+
+    let title = ''; // title 초기화
+
+    if (response.data && response.data.length > 0) {
+      // 첫 번째 아이템의 skuCode에서 title 추출
+      title = response.data[0].skuCode.split('-')[0];
+
+      response.data.forEach(item => {
+        if (item.skuCode) {
+          const parts = item.skuCode.split('-');
+
+          if (parts.length >= 3) {
+            const size = parts[1];
+            const color = parts[2];
+
+            if (size) uniqueSizes.add(size);
+            if (color) uniqueColors.add(color);
+          }
+        }
+      });
+    }
+
+    // Set을 배열로 변환
+    const allSizes = Array.from(uniqueSizes);
+    const allColors = Array.from(uniqueColors);
+
+    // 새로운 data 객체 생성 및 반환
+    const data= {
+      title         :title,
+      sizes      :allSizes,
+      colors     :allColors,
+      skus          :response.data
+    };
+    return data;
   },
 
   getProductsByCategory(category) {
