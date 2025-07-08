@@ -1,13 +1,37 @@
 // src/pages/ProductDetailPage.jsx
-import React, { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
-import { useProductById } from '../../hooks/products/useProducts.jsx'; // 훅 이름 유지
+import React, {useEffect, useMemo, useState} from 'react';
+import {useParams} from 'react-router-dom';
+import {useProductById} from '../../hooks/products/useProducts.jsx'; // 훅 이름 유지
 
 function ProductDetailPage() {
   const { productId } = useParams();
   const { data: skus, isLoading, isError, error } = useProductById(productId);
 
   const [selectedSkuIndex, setSelectedSkuIndex] = useState(0);
+
+  let allSizes = [];
+  let allColors = [];
+
+  skus?.forEach(item => {
+    if (item.skuCode) {
+      const parts = item.skuCode.split('-'); // 예: "test-s-white" -> ["test", "s", "white"]
+
+      if (parts.length >= 3) {
+        const size = parts[1];
+        const color = parts[2];
+
+        if (size && !allSizes.includes(size)) { // 중복 없이 추가
+          allSizes.push(size);
+        }
+        if (color && !allColors.includes(color)) { // 중복 없이 추가
+          allColors.push(color);
+        }
+      }
+    }
+  });
+
+  console.log("Extracted Sizes:", allSizes);
+  console.log("Extracted Colors:", allColors);
 
   useEffect(() => {
     if (skus && skus.length > 0) {
@@ -81,14 +105,6 @@ function ProductDetailPage() {
     );
   }
 
-  // 메인 상품의 공통 정보 (더미 데이터)
-  const commonProductInfo = {
-    title: `Amazing Product ${productId}`,
-    brand: "Awesome Brand",
-    category: "Cool Category",
-    rating: 4.5
-  };
-
   return (
       <div className="min-h-screen bg-white text-gray-800 p-8">
         {/* Header/Nav (Optional) */}
@@ -112,7 +128,7 @@ function ProductDetailPage() {
           <div className="md:w-1/2 flex flex-col p-4">
             <div>
               <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
-                {commonProductInfo.title}
+                {skus.title}
               </h1>
               <p className="text-gray-600 text-lg mb-2">SKU: <span className="font-semibold">{selectedSku.skuCode}</span></p>
               <p className="text-2xl font-bold text-gray-900 mb-6">
