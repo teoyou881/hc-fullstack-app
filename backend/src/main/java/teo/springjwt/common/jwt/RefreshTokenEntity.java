@@ -30,7 +30,7 @@ public class RefreshTokenEntity extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "token", nullable = false, unique = true, length = 512)
+    @Column(name = "token", nullable = false, unique = true, length = 191)
     private String token;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
